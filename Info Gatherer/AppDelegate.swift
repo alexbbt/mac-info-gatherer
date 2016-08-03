@@ -14,7 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Insert code here to initialize your application
         
         // Sets Quit on Close button (so the app doesnstay open in the task bar when they close it)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "quit", name: NSWindowWillCloseNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(AppDelegate.quit), name: NSWindowWillCloseNotification, object: nil)
     }
     
     func applicationWillTerminate(aNotification: NSNotification) {
@@ -105,8 +105,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             "timeStamp": dataToSend.timeStamp,
             "processes": dataToSend.processes
         ]
-        let jsonData: NSData = NSJSONSerialization.dataWithJSONObject(dict, options: NSJSONWritingOptions.allZeros, error: nil)!
-        let jsonString: NSString = NSString(data: jsonData, encoding: NSASCIIStringEncoding)!
+        var jsonString: NSString
+        do {
+            let jsonData: NSData = try NSJSONSerialization.dataWithJSONObject(dict, options: NSJSONWritingOptions())
+            jsonString = NSString(data: jsonData, encoding: NSASCIIStringEncoding)!
+        } catch {
+            jsonString = ""
+        }
         return jsonString as String
     }
     
@@ -124,7 +129,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
                         
-            let responseString = NSString(data: data, encoding: NSUTF8StringEncoding)
+            _ = NSString(data: data!, encoding: NSUTF8StringEncoding)
         }
         task.resume() // Send
         
@@ -132,7 +137,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     // Gets IP addresses and Puts them in storage
     func getIPs() {
-        var ips: [String] = getIFAddresses()
+        let ips: [String] = getIFAddresses()
         var index = 1
         for ip in ips {
             if index != 1 {
@@ -151,8 +156,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var ifaddr : UnsafeMutablePointer<ifaddrs> = nil
         if getifaddrs(&ifaddr) == 0 {
             
-            // For each interface ...
-            for (var ptr = ifaddr; ptr != nil; ptr = ptr.memory.ifa_next) {
+            // while there is a next interface interface ...
+            var ptr = ifaddr
+            while ptr != nil {
                 let flags = Int32(ptr.memory.ifa_flags)
                 var addr = ptr.memory.ifa_addr.memory
                 
@@ -164,13 +170,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         var hostname = [CChar](count: Int(NI_MAXHOST), repeatedValue: 0)
                         if (getnameinfo(&addr, socklen_t(addr.sa_len), &hostname, socklen_t(hostname.count),
                             nil, socklen_t(0), NI_NUMERICHOST) == 0) {
-                                if let address = String.fromCString(hostname) {
-                                    addresses.append(address)
-                                }
+                            if let address = String.fromCString(hostname) {
+                                addresses.append(address)
+                            }
                         }
                     }
                 }
+                
+                // next interface
+                ptr = ptr.memory.ifa_next
             }
+
             freeifaddrs(ifaddr)
         }
         
@@ -196,7 +206,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             var pid: String = ""
             var name: String = ""
             for part in smallArray {
-                if let intValue = (part as! String).toInt() {
+                if Int((part as! String)) != nil {
                     pid = part as! String
                 } else {
                     if name != "" {
@@ -216,8 +226,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //Removes extra white space from string
 extension String {
     func condenseWhitespace() -> String {
-        let components = self.componentsSeparatedByCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet()).filter({!Swift.isEmpty($0)})
-        return " ".join(components)
+        let components = self.componentsSeparatedByCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
+        return components.filter { !$0.isEmpty }.joinWithSeparator(" ")
     }
 }
-
