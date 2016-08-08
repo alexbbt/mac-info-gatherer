@@ -1,30 +1,52 @@
-//
-//  AppDelegate.swift
-//  Info Gatherer
-//
-//  Created by Alexander Bell-Towne on 8/20/15.
-//  Copyright (c) 2015 Alexander Bell-Towne. All rights reserved.
-//
+/**
+ * AppDelegate.swift
+ * Info Gatherer
+ *
+ * Created by Alexander Bell-Towne on 8/20/15.
+ * Copyright (c) 2015 Alexander Bell-Towne. All rights reserved.
+ */
 
 import Cocoa
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
 
-    // App Text Config
+    /**
+     *  APP Text Config
+     *  Update these to change application text.
+     *
+     * ***The most impotant to update is the URL to your submission script***
+     */
     struct Config {
 
+        /**
+         * Main Info
+         * @type {Strings}
+         *
+         * Update with company information
+         */
         static let name = "YOUR NAME"
         static let email = "your@email.com"
         static let phone = "(555) 555-5555"
 
-        // URL where data should be sent
+        /**
+         * URL where data should be sent
+         * @type {String}
+         */
         static let url = "https://submission.url.com/phpfile.php"
 
-        // Description for the top of the app
+        /**
+         * Description for the top of the app
+         * @type {String}
+         */
         static let description = "Experiencing technical difficulty? Please fill out this form to notify " + Config.name + ""
 
-        // All input fields
+        /**
+         * All input fields
+         *
+         * All fields must have a label.
+         * Comments does not have a placeholder.
+         */
         struct fields {
             struct name {
                 static let label = "name:"
@@ -39,27 +61,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Send button and reactions
+        /**
+         * Send button and reactions
+         */
         struct send {
             static let submitButton = "Submit"
 
-            // Messages to display on either of these outcomes from sending the data.
+            /**
+             * Messages to display on either of these outcomes from sending the data.
+             * @type {Strings}
+             */
             static let success = "Information successfully sent to " + Config.name + ". Thank you."
             static let error = "ERROR!\nInformation NOT sent to " + Config.name + ". Please contact us at " + Config.email + " or " + Config.phone + ""
 
-            // Button after info is sent which closes the app.
+            /**
+             * Button after info is sent which closes the app.
+             * @type {String}
+             */
             static let finalButton = "Okay"
         }
 
     }
 
-    // links to UI elements
+    /**
+     * links to UI elements
+     */
     @IBOutlet weak var window: NSWindow!
     @IBOutlet weak var name: NSTextField! // Name input field
     @IBOutlet weak var email: NSTextField! // Email input field
     @IBOutlet var comments: NSTextView! // Feedback or Description of Problem input box (allows multible lines)
 
-    // links to UI View elements
+    /**
+     * links to UI View elements
+     */
     @IBOutlet weak var displayMessage: NSTextField!
     @IBOutlet weak var nameLabel: NSTextField!
     @IBOutlet weak var emailLabel: NSTextField!
@@ -67,10 +101,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet weak var submitButton: NSButton!
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
-        // initialize application
+        // Initialize application.
         setup()
 
-        // Sets Quit on Close button (so the app doesn't stay open in the task bar when they close it)
+        /**
+         * Sets Quit on Close button (so the app doesn't stay open in the task bar when they close it).
+         * @type {function}
+         */
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(AppDelegate.quit), name: NSWindowWillCloseNotification, object: nil)
     }
 
@@ -79,9 +116,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Nothing needed
     }
 
-    // Data struct to store Information accross functions
+    /**
+     * Data struct to store Information accross functions
+     */
     struct dataToSend {
-        static var userName: String = "\\\\" + NSUserName() // the \\\\ is so that it looks like a windows username for the PHP file, i.e. "\\user.name"
+        // the \\\\ is so that it looks like a windows username for the PHP file, i.e. "\\user.name"
+        static var userName: String = "\\\\" + NSUserName()
         static var name: String = String()
         static var machineName: String = String()
         static var timeStamp: String = String()
@@ -93,7 +133,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
 
-    // Set all text
+    /**
+     * Set all text fields and placeholders
+     * @return {Void}
+     */
     func setup() {
         displayMessage.stringValue = Config.description
         nameLabel.stringValue = Config.fields.name.label
@@ -106,17 +149,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         submitButton.title = Config.send.submitButton
     }
 
-    // Enables close button in file menu
+    /**
+     * Enables close button in file menu
+     * @param  {Any}
+     * @return {Void}
+     */
     @IBAction func quitButton(sender: AnyObject) {
         quit()
     }
 
-    // Quits app
+    /**
+     * Quits application.
+     * @return {Void}
+     */
     func quit() {
         NSApplication.sharedApplication().terminate(self)
     }
 
-    // When submit button clicked
+    /**
+     * When submit button clicked
+     * @param  {NSButton}
+     * @return {Void}
+     */
     @IBAction func submit(sender: NSButton) {
         dataToSend.machineName = getHost()
         dataToSend.timeStamp = getTime()
@@ -124,14 +178,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         getIPs()
         dataToSend.name = name.stringValue
         dataToSend.email = email.stringValue
-        dataToSend.comments = ((comments.textStorage as NSTextStorage!).string).condenseWhitespace() // Gets comments and removes extra white space and new lines
 
-        // Sends JSON String, callback for when done
+        /**
+         * Gets comments and removes extra white space and new lines
+         * @type {[String]}
+         */
+        dataToSend.comments = ((comments.textStorage as NSTextStorage!).string).condenseWhitespace()
+
+        /**
+         * Sends JSON String, callback for when done
+         */
         send_Data(make_json(), completion: alertResult)
     }
 
+    /**
+     * Alert and close
+     * @return {Void}
+     */
     func alertResult() {
-        // Alert and close
+
         let sent: NSAlert = NSAlert()
         if !dataToSend.error {
             sent.messageText = Config.send.success
@@ -143,19 +208,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         sent.addButtonWithTitle(Config.send.finalButton)
         let res = sent.runModal()
 
-        // If "Okay" clicked
+        // If Button clicked
         if res == NSAlertFirstButtonReturn {
             quit()
         }
     }
 
-    // Return computer name
+    /**
+     * @return {String} Computer Name
+     */
     func getHost() -> String{
         let host:NSHost = NSHost()
         return host.localizedName!
     }
 
-    // Return current time stamp
+    /**
+     * @return {String} current time stamp
+     */
     func getTime() -> String{
         let date = NSDate()
         let formatter = NSDateFormatter()
@@ -164,7 +233,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return formatter.stringFromDate(date)
     }
 
-    // Turns data in to JSON String (Faster than using NSData object)
+    /**
+     * Turns data in to JSON String
+     * (Faster than using NSData object)
+     *
+     * @return {String} JSON
+     */
     func make_json() -> String{
         let dict: NSDictionary = [
             "name":dataToSend.name,
@@ -186,7 +260,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return jsonString as String
     }
 
-    // Send data to php file
+    /**
+     * Send data to php file
+     *
+     * @param  {String}   JSON
+     * @param  {Function} Callback
+     * @return {Void}
+     */
     func send_Data(json: String, completion: () -> Void) {
         let request = NSMutableURLRequest(URL: NSURL(string: Config.url)!)
         request.HTTPMethod = "POST"
@@ -196,7 +276,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             data, response, error in
 
             if error != nil {
-                dataToSend.error = true // Sets Error for final Message
+                // Sets Error for final Message
+                dataToSend.error = true
             }
 
             completion()
@@ -205,20 +286,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     }
 
-    // Gets IP addresses and Puts them in storage
+    /**
+     * Gets IP addresses and Puts them in storage
+     * @return {Void}
+     */
     func getIPs() {
         let ips: [String] = getIFAddresses()
         var index = 1
         for ip in ips {
             if index != 1 {
-                dataToSend.ipAddress += " - " // Spacer as PHP form expects only one IP
+                 // Spacer as PHP form expects only one IP
+                dataToSend.ipAddress += " - "
             }
             dataToSend.ipAddress += ip
             index = index + 1
         }
     }
 
-    // Returns array of IP addresses
+    /**
+     * Returns array of IP addresses
+     */
     func getIFAddresses() -> [String] {
         var addresses = [String]()
 
@@ -257,7 +344,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return addresses
     }
 
-    // Returns array of PID's and their Names
+    /**
+     * @return {NSDictionary}
+     * ID -> Name
+     */
     func getPIDs() -> NSDictionary{
         let task = NSTask() // Runs shell command and grabs output
         task.launchPath = "/usr/bin/pgrep" // Command
@@ -269,10 +359,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output: NSString = NSString(data: data, encoding: NSUTF8StringEncoding)!
-        let array: NSArray = output.componentsSeparatedByString("\n") // Splits output string by line
+
         let dict: NSMutableDictionary = NSMutableDictionary()
+
+        // Splits output string by line
+        let array: NSArray = output.componentsSeparatedByString("\n")
         for process in array {
-            let smallArray: NSArray = process.componentsSeparatedByString(" ") // Splits line by space
+
+            // Splits line by space
+            let smallArray: NSArray = process.componentsSeparatedByString(" ")
             var pid: String = ""
             var name: String = ""
             for part in smallArray {
@@ -282,7 +377,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     if name != "" {
                         name += " "
                     }
-                    name += part as! String // puts back together the name as one string
+
+                    // puts back together the name as one string
+                    name += part as! String
                 }
             }
             if( pid != "" && name != "") {
@@ -293,7 +390,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-//Removes extra white space from string
+/**
+ * Removes extra white space from string
+ * @return {String} string with extra whitespace removed.
+ */
 extension String {
     func condenseWhitespace() -> String {
         let components = self.componentsSeparatedByCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet())
