@@ -45,13 +45,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             // Messages to display on either of these outcomes from sending the data.
             static let success = "Information successfully sent to " + Config.name + ". Thank you."
-            static let error = "ERROR! Information NOT sent to " + Config.name + ". Please contact us at " + Config.email + " or " + Config.phone + ""
+            static let error = "ERROR!\nInformation NOT sent to " + Config.name + ". Please contact us at " + Config.email + " or " + Config.phone + ""
 
             // Button after info is sent which closes the app.
             static let finalButton = "Okay"
         }
 
     }
+
+    // links to UI elements
+    @IBOutlet weak var window: NSWindow!
+    @IBOutlet weak var name: NSTextField! // Name input field
+    @IBOutlet weak var email: NSTextField! // Email input field
+    @IBOutlet var comments: NSTextView! // Feedback or Description of Problem input box (allows multible lines)
+
+    // links to UI View elements
+    @IBOutlet weak var displayMessage: NSTextField!
+    @IBOutlet weak var nameLabel: NSTextField!
+    @IBOutlet weak var emailLabel: NSTextField!
+    @IBOutlet weak var commentsLabel: NSTextField!
+    @IBOutlet weak var submitButton: NSButton!
 
     func applicationDidFinishLaunching(aNotification: NSNotification) {
         // initialize application
@@ -79,18 +92,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         static var error: Bool = false // error sending so message will be different
     }
 
-    // links to UI elements
-    @IBOutlet weak var window: NSWindow!
-    @IBOutlet weak var name: NSTextField! // Name input field
-    @IBOutlet weak var email: NSTextField! // Email input field
-    @IBOutlet var comments: NSTextView! // Feedback or Description of Problem input box (allows multible lines)
-
-    // links to UI View elements
-    @IBOutlet weak var displayMessage: NSTextField!
-    @IBOutlet weak var nameLabel: NSTextField!
-    @IBOutlet weak var emailLabel: NSTextField!
-    @IBOutlet weak var commentsLabel: NSTextField!
-    @IBOutlet weak var submitButton: NSButton!
 
     // Set all text
     func setup() {
@@ -125,8 +126,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         dataToSend.email = email.stringValue
         dataToSend.comments = ((comments.textStorage as NSTextStorage!).string).condenseWhitespace() // Gets comments and removes extra white space and new lines
 
-        send_Data(make_json()) // Sends JSON String
+        // Sends JSON String, callback for when done
+        send_Data(make_json(), completion: alertResult)
+    }
 
+    func alertResult() {
         // Alert and close
         let sent: NSAlert = NSAlert()
         if !dataToSend.error {
@@ -134,7 +138,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             sent.alertStyle = NSAlertStyle.InformationalAlertStyle
         } else {
             sent.messageText = Config.send.error
-            sent.alertStyle = NSAlertStyle.WarningAlertStyle
+            sent.alertStyle = NSAlertStyle.CriticalAlertStyle
         }
         sent.addButtonWithTitle(Config.send.finalButton)
         let res = sent.runModal()
@@ -183,7 +187,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // Send data to php file
-    func send_Data(json: String) {
+    func send_Data(json: String, completion: () -> Void) {
         let request = NSMutableURLRequest(URL: NSURL(string: Config.url)!)
         request.HTTPMethod = "POST"
         let postString = "json=" + (json as String)
@@ -193,10 +197,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             if error != nil {
                 dataToSend.error = true // Sets Error for final Message
-                return
             }
 
-            _ = NSString(data: data!, encoding: NSUTF8StringEncoding)
+            completion()
         }
         task.resume() // Send
 
