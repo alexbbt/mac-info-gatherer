@@ -24,8 +24,18 @@ system information about the computer:
 The information is posted to the specified URL when the user presses the
 submit button.
 
+# Setup
+Please fill in config data at top of [`AppDelegate.swift`](Info\ Gatherer/AppDelegate.swift#L20)
+
+Required Fields are:
+- `url` where the data is sent
+
+Everything else should be filled out to improve user experiance.
+
 # Credit
 
 This project is based on a Windows application built by [Marie West](https://github.com/mariewest)
 
 [https://github.com/mariewest/Desktop-Help-Request-Client](https://github.com/mariewest/Desktop-Help-Request-Client)
+
+![Info Gatherer](/images/info_gatherer.png)
