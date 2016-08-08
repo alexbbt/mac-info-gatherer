@@ -208,8 +208,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         sent.addButtonWithTitle(Config.send.finalButton)
         let res = sent.runModal()
 
-        // If Button clicked
-        if res == NSAlertFirstButtonReturn {
+        /**
+         * Check if button was clicked.
+         * If it was and there was no error then the app can close.
+         * If there was an error, do not close the app, so they
+         * may try again or copy the text out.
+         */
+        if res == NSAlertFirstButtonReturn && !dataToSend.error {
             quit()
         }
     }
