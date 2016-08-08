@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
          * Description for the top of the app
          * @type {String}
          */
-        static let description = "Experiencing technical difficulty? Please fill out this form to notify " + Config.name + ""
+        static let description = "Experiencing technical difficulty?\nPlease fill out this form to notify " + Config.name + ""
 
         /**
          * All input fields
@@ -49,11 +49,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
          */
         struct fields {
             struct name {
-                static let label = "name:"
+                static let label = "Your Name:"
                 static let placeholder = "John Appleseed"
             }
             struct email {
-                static let label = "email:"
+                static let label = "Company Email:"
                 static let placeholder = "user@example.com"
             }
             struct comments {
